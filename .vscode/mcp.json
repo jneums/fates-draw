@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "TheFates'Draw": {
+      "type": "http",
+      "url": "https://ign2b-xyaaa-aaaai-q33wq-cai.icp0.io/mcp"
+    }
+  }
+}
