@@ -1,6 +1,6 @@
 # Prometheus Application Manifest
 # This is the permanent, unique identifier for your application.
-namespace: github.jneums.fates-draw
+namespace: io.github.jneums.fates-draw
 
 # This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
 submission:
@@ -34,14 +34,14 @@ submission:
 
   # --- Visuals (Replace with your actual asset URLs) ---
   visuals:
-    icon_url: 'https://placehold.co/512x512/1A1A1A/FFFFFF/png?text=FD'
-    banner_url: 'https://placehold.co/1200x630/1A1A1A/FFFFFF/png?text=The+Fates%27+Draw'
-    gallery_images: []
+    icon_url: 'https://github.com/jneums/fates-draw/releases/download/v1.0.0-assets/icon.png'
+    banner_url: 'https://github.com/jneums/fates-draw/releases/download/v1.0.0-assets/banner.png'
+    gallery_images: ['https://github.com/jneums/fates-draw/releases/download/v1.0.0-assets/banner.png']
 
   # --- BUILD-SPECIFIC - YOU MUST FILL THESE OUT BEFORE PUBLISHING ---
   # The full commit hash of the version you are publishing.
   # Run `git rev-parse HEAD` to get this value.
-  git_commit: ''
+  git_commit: '0f1c8d9ac4a986bd63721316ce7a3e5d052817fd'
 
   # The path to the compiled WASM file for this canister.
   # This is typically found in `.dfx/local/canisters/<canister_name>/<canister_name>.wasm`
