@@ -41,7 +41,7 @@ submission:
   # --- BUILD-SPECIFIC - YOU MUST FILL THESE OUT BEFORE PUBLISHING ---
   # The full commit hash of the version you are publishing.
   # Run `git rev-parse HEAD` to get this value.
-  git_commit: '0f1c8d9ac4a986bd63721316ce7a3e5d052817fd'
+  git_commit: '42993a5b7aaf7b9aca82857244665e673831a44c'
 
   # The path to the compiled WASM file for this canister.
   # This is typically found in `.dfx/local/canisters/<canister_name>/<canister_name>.wasm`
