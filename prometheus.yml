@@ -1,0 +1,48 @@
+# Prometheus Application Manifest
+# This is the permanent, unique identifier for your application.
+namespace: github.jneums.fates-draw
+
+# This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
+submission:
+  # --- Core App Information ---
+  name: The Fates' Draw
+  description: A cryptographically secure, on-chain randomness beacon. The Fates' Draw provides developers with a reliable and verifiable source of entropy, essential for building decentralized games, NFTs, and secure protocols.
+  publisher: Prometheus Labs # Or your developer/company name
+  category: Developer Tools
+
+  # --- Technical & Marketing Details ---
+  repo_url: https://github.com/jneums/fates-draw
+  mcp_path: /mcp
+  why_this_app: Getting true, verifiable randomness on a deterministic platform like the blockchain is hard. The Fates' Draw solves this by providing a simple, powerful API backed by the IC's native cryptographic entropy. It eliminates the need for complex, off-chain solutions, allowing you to build secure, unpredictable applications with confidence.
+  key_features:
+    - "Cryptographically Secure: Leverages the Internet Computer's native system-level entropy."
+    - "Fully On-Chain & Verifiable: No off-chain components or trusted third parties required."
+    - "Developer-Friendly API: A simple tool call to request a specific number of random bytes."
+    - "Flexible & Performant: Designed for low-latency responses for on-chain applications."
+  tags:
+    - randomness
+    - rng
+    - crypto
+    - entropy
+    - beacon
+    - developer-tools
+    - utilities
+    - on-chain
+    - web3
+    - gaming
+    - nft
+
+  # --- Visuals (Replace with your actual asset URLs) ---
+  visuals:
+    icon_url: 'https://placehold.co/512x512/1A1A1A/FFFFFF/png?text=FD'
+    banner_url: 'https://placehold.co/1200x630/1A1A1A/FFFFFF/png?text=The+Fates%27+Draw'
+    gallery_images: []
+
+  # --- BUILD-SPECIFIC - YOU MUST FILL THESE OUT BEFORE PUBLISHING ---
+  # The full commit hash of the version you are publishing.
+  # Run `git rev-parse HEAD` to get this value.
+  git_commit: ''
+
+  # The path to the compiled WASM file for this canister.
+  # This is typically found in `.dfx/local/canisters/<canister_name>/<canister_name>.wasm`
+  wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm

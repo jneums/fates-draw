@@ -4,6 +4,11 @@ import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
+import Buffer "mo:base/Buffer";
+import Base16 "mo:base16/Base16";
+import Array "mo:base/Array";
+import Random "mo:base/Random";
+import Iter "mo:base/Iter";
 
 import HttpTypes "mo:http-types";
 import Map "mo:map/Map";
@@ -44,8 +49,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // Resource contents stored in memory for simplicity.
   // In a real application these would probably be uploaded or user generated.
   var resourceContents = [
-    ("file:///main.py", "print('Hello from main.py!')"),
-    ("file:///README.md", "# MCP Motoko Server"),
+    ("file:///README.md", "# The Fates' Draw\n\nA cryptographically secure randomness beacon on the Internet Computer."),
   ];
 
   // The application context that holds our state.
@@ -123,75 +127,82 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // --- 1. DEFINE YOUR RESOURCES & TOOLS ---
   transient let resources : [McpTypes.Resource] = [
     {
-      uri = "file:///main.py";
-      name = "main.py";
-      title = ?"Main Python Script";
-      description = ?"Contains the main logic of the application.";
-      mimeType = ?"text/x-python";
-    },
-    {
       uri = "file:///README.md";
       name = "README.md";
-      title = ?"Project Documentation";
+      title = ?"About The Fates' Draw";
       description = null;
       mimeType = ?"text/markdown";
     },
   ];
 
+  // Define the new randomness tool.
   transient let tools : [McpTypes.Tool] = [{
-    name = "get_weather";
-    title = ?"Weather Provider";
-    description = ?"Get current weather information for a location";
+    name = "draw_randomness";
+    title = ?"Draw Randomness";
+    description = ?"Generates a cryptographically secure random blob of a specified length.";
     inputSchema = Json.obj([
       ("type", Json.str("object")),
-      ("properties", Json.obj([("location", Json.obj([("type", Json.str("string")), ("description", Json.str("City name or zip code"))]))])),
-      ("required", Json.arr([Json.str("location")])),
+      ("properties", Json.obj([("num_bytes", Json.obj([("type", Json.str("integer")), ("description", Json.str("The number of bytes of randomness to generate (1-1024)."))]))])),
+      ("required", Json.arr([Json.str("num_bytes")])),
     ]);
     outputSchema = ?Json.obj([
       ("type", Json.str("object")),
-      ("properties", Json.obj([("report", Json.obj([("type", Json.str("string")), ("description", Json.str("The textual weather report."))]))])),
-      ("required", Json.arr([Json.str("report")])),
+      ("properties", Json.obj([("random_bytes", Json.obj([("type", Json.str("string")), ("description", Json.str("The generated random bytes, encoded as a hex string."))]))])),
+      ("required", Json.arr([Json.str("random_bytes")])),
     ]);
-
-    payment = null; // No payment required, this tool is free to use.
-    // To require payment, set the `payment` field like this:
-    // payment = ?{
-    //   ledger = Principal.fromText("vizcg-th777-77774-qaaea-cai"); // ICRC2 Ledger canister ID
-    //   amount = 10_000; // Amount in e8s (1 ICP)
-    // };
+    payment = null; // This tool is free to use.
   }];
 
   // --- 2. DEFINE YOUR TOOL LOGIC ---
   // The `auth` parameter will be `null` if auth is disabled or if the user is anonymous.
   // It will contain user info if auth is enabled and the user provides a valid token.
-  func getWeatherTool(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) {
-    let location = switch (Result.toOption(Json.getAsText(args, "location"))) {
-      case (?loc) { loc };
-      case (null) {
-        return cb(#ok({ content = [#text({ text = "Missing 'location' arg." })]; isError = true; structuredContent = null }));
+  func drawRandomnessTool(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    // a. Safely parse and validate the input (no changes here).
+    let num_bytes = switch (Json.getAsNat(args, "num_bytes")) {
+      case (#ok(n)) { n };
+      case (#err(_)) {
+        return cb(#ok({ content = [#text({ text = "Invalid or missing 'num_bytes' argument." })]; isError = true; structuredContent = null }));
       };
     };
 
-    // The human-readable report.
-    let report = "The weather in " # location # " is sunny.";
+    if (num_bytes == 0 or num_bytes > 1024) {
+      return cb(#ok({ content = [#text({ text = "'num_bytes' must be between 1 and 1024." })]; isError = true; structuredContent = null }));
+    };
 
-    // Build the structured JSON payload that matches our outputSchema.
-    let structuredPayload = Json.obj([("report", Json.str(report))]);
+    // b. Use an `async` block to handle the asynchronous call to `Random.blob()`.
+    // c. Calculate how many 32-byte blobs we need to fetch.
+    // We use ceiling division: (num_bytes + 31) / 32
+    let num_blobs_needed = (num_bytes + 31) / 32;
+    var buffer = Buffer.Buffer<Nat8>(num_blobs_needed * 32);
+
+    // d. Fetch the required number of random blobs in a loop.
+    for (_ in Iter.range(0, num_blobs_needed - 1)) {
+      let entropy_chunk : Blob = await Random.blob();
+      for (byte in entropy_chunk.vals()) {
+        buffer.add(byte);
+      };
+    };
+
+    // e. Trim the buffer to the exact requested size.
+    let final_blob = Blob.fromArray(Array.subArray(Buffer.toArray(buffer), 0, num_bytes));
+
+    // f. Format the output (no changes here).
+    let hex_string = Base16.encode(final_blob);
+    let structuredPayload = Json.obj([("random_bytes", Json.str(hex_string))]);
     let stringified = Json.stringify(structuredPayload, null);
 
-    // Return the full, compliant result.
+    // g. Return the successful result via the callback.
     cb(#ok({ content = [#text({ text = stringified })]; isError = false; structuredContent = ?structuredPayload }));
   };
 
   // --- 3. CONFIGURE THE SDK ---
   transient let mcpConfig : McpTypes.McpConfig = {
     self = Principal.fromActor(self);
-    allowanceUrl = null; // No allowance URL needed for free tools.
-    // allowanceUrl = ?allowanceUrl; // Uncomment this line if using paid tools.
+    allowanceUrl = null;
     serverInfo = {
-      name = "full-onchain-mcp-server";
-      title = "Full On-chain MCP Server";
-      version = "0.1.0";
+      name = "the-fates-draw";
+      title = "The Fates' Draw";
+      version = "1.0.0";
     };
     resources = resources;
     resourceReader = func(uri) {
@@ -199,7 +210,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     };
     tools = tools;
     toolImplementations = [
-      ("get_weather", getWeatherTool),
+      ("draw_randomness", drawRandomnessTool), // Map the tool name to its implementation
     ];
     beacon = beaconContext;
   };
