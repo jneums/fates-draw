@@ -9,6 +9,7 @@ import Base16 "mo:base16/Base16";
 import Array "mo:base/Array";
 import Random "mo:base/Random";
 import Iter "mo:base/Iter";
+import Error "mo:base/Error";
 
 import HttpTypes "mo:http-types";
 import Map "mo:map/Map";
@@ -136,22 +137,40 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   ];
 
   // Define the new randomness tool.
-  transient let tools : [McpTypes.Tool] = [{
-    name = "draw_randomness";
-    title = ?"Draw Randomness";
-    description = ?"Generates a cryptographically secure random blob of a specified length.";
-    inputSchema = Json.obj([
-      ("type", Json.str("object")),
-      ("properties", Json.obj([("num_bytes", Json.obj([("type", Json.str("integer")), ("description", Json.str("The number of bytes of randomness to generate (1-1024)."))]))])),
-      ("required", Json.arr([Json.str("num_bytes")])),
-    ]);
-    outputSchema = ?Json.obj([
-      ("type", Json.str("object")),
-      ("properties", Json.obj([("random_bytes", Json.obj([("type", Json.str("string")), ("description", Json.str("The generated random bytes, encoded as a hex string."))]))])),
-      ("required", Json.arr([Json.str("random_bytes")])),
-    ]);
-    payment = null; // This tool is free to use.
-  }];
+  transient let tools : [McpTypes.Tool] = [
+    {
+      name = "draw_randomness";
+      title = ?"Draw Randomness";
+      description = ?"Generates a cryptographically secure random blob of a specified length.";
+      inputSchema = Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([("num_bytes", Json.obj([("type", Json.str("integer")), ("description", Json.str("The number of bytes of randomness to generate (1-1024)."))]))])),
+        ("required", Json.arr([Json.str("num_bytes")])),
+      ]);
+      outputSchema = ?Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([("random_bytes", Json.obj([("type", Json.str("string")), ("description", Json.str("The generated random bytes, encoded as a hex string."))]))])),
+        ("required", Json.arr([Json.str("random_bytes")])),
+      ]);
+      payment = null; // This tool is free to use.
+    },
+    {
+      name = "coinflip";
+      title = ?"Flip a Coin";
+      description = ?"Simulates a fair coin toss, returning 'Heads' or 'Tails'.";
+      inputSchema = Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([])), // No input properties
+        ("required", Json.arr([])) // No required inputs
+      ]);
+      outputSchema = ?Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([("result", Json.obj([("type", Json.str("string")), ("description", Json.str("The result of the coin flip, either 'Heads' or 'Tails'."))]))])),
+        ("required", Json.arr([Json.str("result")])),
+      ]);
+      payment = null; // This tool is also free
+    },
+  ];
 
   // --- 2. DEFINE YOUR TOOL LOGIC ---
   // The `auth` parameter will be `null` if auth is disabled or if the user is anonymous.
@@ -195,6 +214,40 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     cb(#ok({ content = [#text({ text = stringified })]; isError = false; structuredContent = ?structuredPayload }));
   };
 
+  // The implementation for the new coinflip tool.
+  func coinflipTool(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    try {
+      // 1. Fetch a fresh 32-byte blob of secure entropy from the IC.
+      let entropy : Blob = await Random.blob();
+
+      // 2. Create a `Finite` randomness source from the entropy.
+      let random = Random.Finite(entropy);
+
+      // 3. Use the `coin()` method to get a random boolean (?Bool).
+      switch (random.coin()) {
+        case (?was_heads) {
+          // The flip was successful.
+          let result_text = if (was_heads) { "Heads" } else { "Tails" };
+
+          // 4. Format the output to match the schema.
+          let structuredPayload = Json.obj([("result", Json.str(result_text))]);
+          let stringified = Json.stringify(structuredPayload, null);
+
+          // 5. Return the successful result.
+          cb(#ok({ content = [#text({ text = stringified })]; isError = false; structuredContent = ?structuredPayload }));
+        };
+        case (null) {
+          // This is extremely unlikely with a 32-byte entropy source, but we handle it for safety.
+          cb(#ok({ content = [#text({ text = "Failed to draw randomness from entropy source." })]; isError = true; structuredContent = null }));
+        };
+      };
+    } catch (e) {
+      // Handle any unexpected errors during the async call.
+      let error_msg = "An unexpected error occurred: " # Error.message(e);
+      cb(#ok({ content = [#text({ text = error_msg })]; isError = true; structuredContent = null }));
+    };
+  };
+
   // --- 3. CONFIGURE THE SDK ---
   transient let mcpConfig : McpTypes.McpConfig = {
     self = Principal.fromActor(self);
@@ -202,7 +255,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     serverInfo = {
       name = "the-fates-draw";
       title = "The Fates' Draw";
-      version = "1.0.1";
+      version = "1.1.0";
     };
     resources = resources;
     resourceReader = func(uri) {
@@ -211,6 +264,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     tools = tools;
     toolImplementations = [
       ("draw_randomness", drawRandomnessTool), // Map the tool name to its implementation
+      ("coinflip", coinflipTool),
     ];
     beacon = beaconContext;
   };
