@@ -10,6 +10,8 @@ import Array "mo:base/Array";
 import Random "mo:base/Random";
 import Iter "mo:base/Iter";
 import Error "mo:base/Error";
+import Int "mo:base/Int";
+import Time "mo:base/Time";
 
 import HttpTypes "mo:http-types";
 import Map "mo:map/Map";
@@ -255,7 +257,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     serverInfo = {
       name = "the-fates-draw";
       title = "The Fates' Draw";
-      version = "1.1.0";
+      version = "1.1.1";
     };
     resources = resources;
     resourceReader = func(uri) {
@@ -442,5 +444,18 @@ shared ({ caller = deployer }) persistent actor class McpServer(
         return ApiKey.list_my_api_keys(ctx, msg.caller);
       };
     };
+  };
+
+  /// (5.1) Upgrade finished stub
+  public type UpgradeFinishedResult = {
+    #InProgress : Nat;
+    #Failed : (Nat, Text);
+    #Success : Nat;
+  };
+  private func natNow() : Nat {
+    return Int.abs(Time.now());
+  };
+  public func icrc120_upgrade_finished() : async UpgradeFinishedResult {
+    #Success(natNow());
   };
 };

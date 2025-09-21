@@ -2,23 +2,23 @@
 # This is the permanent, unique identifier for your application.
 namespace: io.github.jneums.fates-draw
 
-# This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
+# This section contains all data for a specific version.
 submission:
   # --- Core App Information ---
   name: The Fates' Draw
-  description: A cryptographically secure, on-chain randomness beacon. The Fates' Draw provides developers with a reliable and verifiable source of entropy, essential for building decentralized games, NFTs, and secure protocols.
-  publisher: Prometheus Labs # Or your developer/company name
+  description: A verifiable on-chain randomness oracle. Provides both raw cryptographic entropy and simple, high-level tools like coin flipping for games, NFTs, and dApps.
+  publisher: Atlas Labs
   category: Developer Tools
 
   # --- Technical & Marketing Details ---
   repo_url: https://github.com/jneums/fates-draw
   mcp_path: /mcp
-  why_this_app: Getting true, verifiable randomness on a deterministic platform like the blockchain is hard. The Fates' Draw solves this by providing a simple, powerful API backed by the IC's native cryptographic entropy. It eliminates the need for complex, off-chain solutions, allowing you to build secure, unpredictable applications with confidence.
+  why_this_app: Verifiable randomness on the blockchain is a hard problem. The Fates' Draw solves it by exposing the IC's native entropy through a simple, on-chain API. Build secure, unpredictable apps without complex, off-chain solutions.
   key_features:
-    - "Cryptographically Secure: Leverages the Internet Computer's native system-level entropy."
+    - "Cryptographically Secure: Leverages the Internet Computer's native, system-level entropy."
     - "Fully On-Chain & Verifiable: No off-chain components or trusted third parties required."
-    - "Developer-Friendly API: A simple tool call to request a specific number of random bytes."
-    - "Flexible & Performant: Designed for low-latency responses for on-chain applications."
+    - "Dual-Function API: Get low-level random bytes (`draw_randomness`) or a simple, fair coin toss (`coinflip`)."
+    - "Built for dApps & Gaming: A reliable source of truth for NFT mints, in-game events, and secure protocols."
   tags:
     - randomness
     - rng
@@ -26,13 +26,11 @@ submission:
     - entropy
     - beacon
     - developer-tools
-    - utilities
     - on-chain
-    - web3
     - gaming
     - nft
 
-  # --- Visuals (Replace with your actual asset URLs) ---
+  # --- Visuals ---
   visuals:
     icon_url: 'https://github.com/jneums/fates-draw/releases/download/v1.0.0-assets/icon.png'
     banner_url: 'https://github.com/jneums/fates-draw/releases/download/v1.0.0-assets/banner.png'
@@ -40,9 +38,7 @@ submission:
 
   # --- BUILD-SPECIFIC - YOU MUST FILL THESE OUT BEFORE PUBLISHING ---
   # The full commit hash of the version you are publishing.
-  # Run `git rev-parse HEAD` to get this value.
-  git_commit: '42993a5b7aaf7b9aca82857244665e673831a44c'
-
+  git_commit: 3ac07f39e7254fa9ee923b9489d121733e9e1fe7
+  
   # The path to the compiled WASM file for this canister.
-  # This is typically found in `.dfx/local/canisters/<canister_name>/<canister_name>.wasm`
   wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm
