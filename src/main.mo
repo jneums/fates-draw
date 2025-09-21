@@ -100,16 +100,14 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // This helps the Prometheus Protocol DAO understand ecosystem growth.
   // =================================================================================
 
-  transient let beaconContext : ?Beacon.BeaconContext = null;
+  // transient let beaconContext : ?Beacon.BeaconContext = null;
 
   // --- UNCOMMENT THIS BLOCK TO ENABLE THE BEACON ---
-  /*
   let beaconCanisterId = Principal.fromText("m63pw-fqaaa-aaaai-q33pa-cai");
   transient let beaconContext : ?Beacon.BeaconContext = ?Beacon.init(
-      beaconCanisterId, // Public beacon canister ID
-      1 * 60 * 60, // Send a beacon every 1 hour
+    beaconCanisterId, // Public beacon canister ID
+    ?(15 * 60), // Send a beacon every 15 minutes
   );
-  */
   // --- END OF BEACON BLOCK ---
 
   // --- Timers ---
@@ -257,7 +255,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     serverInfo = {
       name = "the-fates-draw";
       title = "The Fates' Draw";
-      version = "1.1.2";
+      version = "1.1.3";
     };
     resources = resources;
     resourceReader = func(uri) {
