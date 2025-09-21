@@ -255,7 +255,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     serverInfo = {
       name = "the-fates-draw";
       title = "The Fates' Draw";
-      version = "1.1.3";
+      version = "1.1.4";
     };
     resources = resources;
     resourceReader = func(uri) {
