@@ -38,7 +38,7 @@ submission:
 
   # --- BUILD-SPECIFIC - YOU MUST FILL THESE OUT BEFORE PUBLISHING ---
   # The full commit hash of the version you are publishing.
-  git_commit: 2bcfdd5564e24ca102b0600640e73c6a2e5e8402
+  git_commit: 25fc37b611f334b7ffb48c903369002890e0b7a1
   
   # The path to the compiled WASM file for this canister.
   wasm_path: .dfx/local/canisters/my_mcp_server/my_mcp_server.wasm
